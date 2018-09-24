@@ -1,0 +1,172 @@
+version: "3.5"
+services:
+  interface:
+    image: dpage/pgadmin4
+    ports:
+      - "443:443"
+
+    environment:
+      PGADMIN_ENABLE_TLS: 1
+      PGADMIN_DEFAULT_EMAIL: pgadmin@towson.edu
+      PGADMIN_DEFAULT_PASSWORD: Top Secret Password Enabled
+
+    networks:
+      - pgadmin
+
+    secrets:
+      - source: server_key
+        target: /certs/server.key
+        mode: 0400
+
+      - source: server_cert
+        target: /certs/server.cert
+        mode: 0400
+
+  nate-db:
+    image: cgis/pgrouting
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 0.5G
+      restart_policy:
+        condition: on-failure
+        window: 30s
+        max_attempts: 10
+
+    ports:
+      - "3567:5432"
+
+    volumes:
+      - nate-data:/var/lib/postgresql/data
+
+    networks:
+      - pgadmin
+
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+
+    configs:
+      - source: postgres-config
+        target: /etc/postgresql/postgresql.conf
+        mode: 0660
+
+    secrets:
+      - db_name
+      - db_user
+      - db_password
+
+      - source: server_key
+        mode: 0600
+
+      - source: server_cert
+        mode: 0600
+
+    depends_on:
+      - interface
+
+  alex-db:
+    image: cgis/pgrouting
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 0.5G
+      restart_policy:
+        condition: on-failure
+        window: 30s
+        max_attempts: 10
+
+    volumes:
+      - alex-data:/var/lib/postgresql/data
+
+    networks:
+      - pgadmin
+
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+
+    configs:
+      - source: postgres-config
+        target: /etc/postgresql/postgresql.conf
+        mode: 0440
+
+    secrets:
+      - db_name
+      - db_user
+      - db_password
+
+      - server_key
+      - server_cert
+
+    depends_on:
+      - interface
+
+  christina-db:
+    image: cgis/pgrouting
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 0.5G
+      restart_policy:
+        condition: on-failure
+        window: 30s
+        max_attempts: 10
+
+    volumes:
+      - christina-data:/var/lib/postgresql/data
+
+    networks:
+      - pgadmin
+
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+
+    configs:
+      - source: postgres-config
+        target: /etc/postgresqsl/postgresql.conf
+        mode: 0440
+
+    secrets:
+      - db_name
+      - db_user
+      - db_password
+
+      - server_key
+      - server_cert
+
+    depends_on:
+      - interface
+
+networks:
+  pgadmin:
+
+volumes:
+  alex-data:
+  nate-data:
+  christina-data:
+
+configs:
+  postgres-config:
+    external: true
+
+secrets:
+  db_name:
+    external: true
+  db_user:
+    external: true
+  db_password:
+    external: true
+
+  server_key:
+    external: true
+
+  server_cert:
+    external: true
