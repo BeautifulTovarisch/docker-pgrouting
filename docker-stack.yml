@@ -7,7 +7,7 @@ services:
 
     environment:
       PGADMIN_ENABLE_TLS: 1
-      PGADMIN_DEFAULT_EMAIL: pgadmin@towson.edu
+      PGADMIN_DEFAULT_EMAIL: example@example
       PGADMIN_DEFAULT_PASSWORD: Top Secret Password Enabled
 
     networks:
